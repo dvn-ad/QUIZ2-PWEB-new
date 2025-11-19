@@ -2,81 +2,177 @@ package com.example.quizjakarta.repository;
 
 import com.example.quizjakarta.model.Author;
 import com.example.quizjakarta.model.Book;
+import com.example.quizjakarta.util.DBConnection;
 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class DataStore {
-    private static final List<Author> authors = new ArrayList<>();
-    private static final List<Book> books = new ArrayList<>();
-    private static final AtomicInteger authorIdCounter = new AtomicInteger(1);
-    private static final AtomicInteger bookIdCounter = new AtomicInteger(1);
-
-    static {
-        // Seed data
-        addAuthor(new Author(0, "J.K. Rowling", "jk@example.com"));
-        addAuthor(new Author(0, "George R.R. Martin", "grrm@example.com"));
-        
-        addBook(new Book(0, "Harry Potter", 1, 20.0));
-        addBook(new Book(0, "Game of Thrones", 2, 25.0));
-    }
 
     // Author methods
     public static List<Author> getAllAuthors() {
-        return new ArrayList<>(authors);
+        List<Author> authors = new ArrayList<>();
+        String sql = "SELECT * FROM authors";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                authors.add(new Author(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return authors;
     }
 
     public static Author getAuthorById(int id) {
-        return authors.stream().filter(a -> a.getId() == id).findFirst().orElse(null);
+        String sql = "SELECT * FROM authors WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Author(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("email")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void addAuthor(Author author) {
-        author.setId(authorIdCounter.getAndIncrement());
-        authors.add(author);
+        String sql = "INSERT INTO authors (name, email) VALUES (?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, author.getName());
+            pstmt.setString(2, author.getEmail());
+            pstmt.executeUpdate();
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    author.setId(generatedKeys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void updateAuthor(Author author) {
-        for (int i = 0; i < authors.size(); i++) {
-            if (authors.get(i).getId() == author.getId()) {
-                authors.set(i, author);
-                return;
-            }
+        String sql = "UPDATE authors SET name = ?, email = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, author.getName());
+            pstmt.setString(2, author.getEmail());
+            pstmt.setInt(3, author.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public static void deleteAuthor(int id) {
-        authors.removeIf(a -> a.getId() == id);
-        // Also delete books by this author? Or keep them? Let's cascade delete for simplicity
-        books.removeIf(b -> b.getAuthorId() == id);
+        String sql = "DELETE FROM authors WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // Book methods
     public static List<Book> getAllBooks() {
-        return new ArrayList<>(books);
+        List<Book> books = new ArrayList<>();
+        String sql = "SELECT * FROM books";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                books.add(new Book(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getInt("author_id"),
+                        rs.getDouble("price")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return books;
     }
 
     public static Book getBookById(int id) {
-        return books.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
+        String sql = "SELECT * FROM books WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Book(
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getInt("author_id"),
+                            rs.getDouble("price")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void addBook(Book book) {
-        book.setId(bookIdCounter.getAndIncrement());
-        books.add(book);
+        String sql = "INSERT INTO books (title, author_id, price) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, book.getTitle());
+            pstmt.setInt(2, book.getAuthorId());
+            pstmt.setDouble(3, book.getPrice());
+            pstmt.executeUpdate();
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    book.setId(generatedKeys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void updateBook(Book book) {
-        for (int i = 0; i < books.size(); i++) {
-            if (books.get(i).getId() == book.getId()) {
-                books.set(i, book);
-                return;
-            }
+        String sql = "UPDATE books SET title = ?, author_id = ?, price = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, book.getTitle());
+            pstmt.setInt(2, book.getAuthorId());
+            pstmt.setDouble(3, book.getPrice());
+            pstmt.setInt(4, book.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public static void deleteBook(int id) {
-        books.removeIf(b -> b.getId() == id);
+        String sql = "DELETE FROM books WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

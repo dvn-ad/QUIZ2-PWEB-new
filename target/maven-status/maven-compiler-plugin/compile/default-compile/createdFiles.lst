@@ -1,0 +1,7 @@
+com\example\quizjakarta\HelloServlet.class
+com\example\quizjakarta\servlet\AuthorServlet.class
+com\example\quizjakarta\util\DBConnection.class
+com\example\quizjakarta\model\Author.class
+com\example\quizjakarta\servlet\BookServlet.class
+com\example\quizjakarta\repository\DataStore.class
+com\example\quizjakarta\model\Book.class
