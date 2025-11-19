@@ -2,6 +2,7 @@ package com.example.quizjakarta.repository;
 
 import com.example.quizjakarta.model.Author;
 import com.example.quizjakarta.model.Book;
+import com.example.quizjakarta.model.User;
 import com.example.quizjakarta.util.DBConnection;
 
 import java.sql.*;
@@ -184,5 +185,28 @@ public class DataStore {
             e.printStackTrace();
             throw new RuntimeException("Error deleting book: " + e.getMessage(), e);
         }
+    }
+
+    // User methods
+    public static User validateUser(String username, String password) {
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new User(
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getString("password")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error validating user: " + e.getMessage(), e);
+        }
+        return null;
     }
 }

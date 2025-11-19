@@ -10,6 +10,10 @@
         <header style="text-align: center;">
             <h1>Library Management System</h1>
             <p style="color: #64748b;">Manage your books and authors efficiently</p>
+            <div style="margin-top: 10px;">
+                <span>Welcome, ${sessionScope.user.username}!</span>
+                <a href="logout" style="color: red; margin-left: 10px;">Logout</a>
+            </div>
         </header>
         
         <div class="hero">

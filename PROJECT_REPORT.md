@@ -1,24 +1,27 @@
 # Laporan Proyek: Sistem Manajemen Perpustakaan (CRUD Authors & Books)
 
 ## 1. Ringkasan Proyek
-Proyek ini adalah aplikasi web berbasis Java (Jakarta EE) yang mengimplementasikan operasi CRUD (Create, Read, Update, Delete) untuk dua entitas utama: **Authors** (Penulis) dan **Books** (Buku). Aplikasi ini menggunakan arsitektur MVC (Model-View-Controller) sederhana tanpa database eksternal (menggunakan penyimpanan in-memory) dan dijalankan di atas server Apache Tomcat.
+Proyek ini adalah aplikasi web berbasis Java (Jakarta EE) yang mengimplementasikan operasi CRUD (Create, Read, Update, Delete) untuk dua entitas utama: **Authors** (Penulis) dan **Books** (Buku). Aplikasi ini menggunakan arsitektur MVC (Model-View-Controller) dan terintegrasi dengan database **MySQL** untuk penyimpanan data persisten. Aplikasi dijalankan di atas server Apache Tomcat.
 
 ## 2. Struktur Proyek
 Struktur direktori proyek adalah sebagai berikut:
 ```
 quizJakarta/
 ├── pom.xml                     # Konfigurasi Maven dan dependensi
+├── DATABASE_DESIGN.md          # Desain database (ERD & SQL Script)
 ├── src/
 │   └── main/
 │       ├── java/com/example/quizjakarta/
 │       │   ├── model/          # Kelas POJO (Plain Old Java Object)
 │       │   │   ├── Author.java
 │       │   │   └── Book.java
-│       │   ├── repository/     # Penyimpanan data (In-Memory)
+│       │   ├── repository/     # Akses Data (DAO Pattern)
 │       │   │   └── DataStore.java
-│       │   └── servlet/        # Controller (Menangani request HTTP)
-│       │       ├── AuthorServlet.java
-│       │       └── BookServlet.java
+│       │   ├── servlet/        # Controller (Menangani request HTTP)
+│       │   │   ├── AuthorServlet.java
+│       │   │   └── BookServlet.java
+│       │   └── util/           # Utilitas
+│       │       └── DBConnection.java
 │       └── webapp/             # Frontend (JSP & CSS)
 │           ├── css/
 │           │   └── style.css
@@ -50,15 +53,23 @@ Package ini berisi representasi objek data.
 Package ini menangani akses data.
 
 1.  **`DataStore.java`**:
-    *   Berfungsi sebagai database simulasi (in-memory).
-    *   Menggunakan `static List<Author>` dan `static List<Book>` untuk menyimpan data selama aplikasi berjalan.
-    *   Menggunakan `AtomicInteger` untuk menghasilkan ID unik secara otomatis (auto-increment).
+    *   Berfungsi sebagai Data Access Object (DAO).
+    *   Menggunakan **JDBC (Java Database Connectivity)** untuk berinteraksi dengan database MySQL.
     *   Menyediakan metode statis untuk operasi CRUD:
         *   `getAllAuthors()`, `getAuthorById(id)`, `addAuthor(author)`, `updateAuthor(author)`, `deleteAuthor(id)`.
         *   Metode serupa untuk `Book`.
-    *   **Fitur Cascade Delete**: Saat penulis dihapus, buku yang ditulis oleh penulis tersebut juga ikut dihapus untuk menjaga integritas data.
+    *   Menggunakan `PreparedStatement` untuk mencegah SQL Injection.
+    *   Mengimplementasikan *Exception Handling* untuk menangkap dan menampilkan error database.
 
-### C. Servlet / Controller (`com.example.quizjakarta.servlet`)
+### C. Utilities (`com.example.quizjakarta.util`)
+Package ini berisi kelas pendukung.
+
+1.  **`DBConnection.java`**:
+    *   Mengelola koneksi ke database MySQL.
+    *   Mendukung konfigurasi dinamis melalui **Environment Variables** (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
+    *   Memiliki fallback ke konfigurasi default (`localhost`) jika environment variable tidak ditemukan, memudahkan pengembangan di lokal maupun deployment di VPS.
+
+### D. Servlet / Controller (`com.example.quizjakarta.servlet`)
 Package ini menangani logika bisnis dan navigasi.
 
 1.  **`AuthorServlet.java`** (`@WebServlet("/authors")`):
@@ -115,13 +126,31 @@ Menggunakan **JSTL (Jakarta Standard Tag Library)** untuk logika tampilan (loopi
 File ini mengatur dependensi proyek menggunakan Maven.
 *   **Dependencies**:
     *   `jakarta.servlet-api`: API dasar untuk Servlet.
-    *   `jakarta.servlet.jsp.jstl-api` & `jakarta.servlet.jsp.jstl`: Library untuk menggunakan tag JSTL di JSP (seperti `<c:forEach>`, `<c:if>`).
+    *   `jakarta.servlet.jsp.jstl-api` & `jakarta.servlet.jsp.jstl`: Library untuk menggunakan tag JSTL di JSP.
+    *   `mysql-connector-j`: Driver JDBC untuk menghubungkan aplikasi Java dengan MySQL.
     *   `junit-jupiter`: Untuk unit testing (opsional).
 *   **Build Plugin**: `maven-war-plugin` untuk memaketkan aplikasi menjadi file `.war`.
 
-## 6. Cara Menjalankan
-1.  Build proyek dengan perintah: `mvn clean package`.
-2.  Ambil file `quizJakarta.war` dari folder `target/`.
-3.  Letakkan file tersebut di folder `webapps/` pada instalasi Apache Tomcat 10.1.
-4.  Jalankan Tomcat (`bin/startup.bat` atau `bin/startup.sh`).
-5.  Akses aplikasi di browser: `http://localhost:8080/quizJakarta/`.
+## 6. Cara Menjalankan & Deployment
+
+### Persiapan Database
+1.  Pastikan MySQL Server sudah berjalan.
+2.  Buat database dan tabel menggunakan script SQL berikut (atau lihat `DATABASE_DESIGN.md`):
+    ```sql
+    CREATE DATABASE quiz2;
+    USE quiz2;
+    -- (Jalankan script create table authors dan books)
+    ```
+
+### Menjalankan di Lokal
+1.  Build proyek: `mvn clean package`.
+2.  Deploy file `quizJakarta.war` ke Tomcat.
+3.  Aplikasi akan menggunakan konfigurasi default (localhost, user: root, tanpa password).
+
+### Deployment ke VPS (Linux)
+1.  Setup MySQL di VPS dan pastikan user root bisa diakses (atau buat user khusus).
+2.  Konfigurasi Environment Variable di Tomcat agar aplikasi bisa membaca kredensial database yang aman.
+    *   Edit `/etc/default/tomcat10` atau gunakan `systemctl edit tomcat10`.
+    *   Set variabel: `DB_USER`, `DB_PASSWORD`, `DB_HOST`, dll.
+3.  Upload `.war` file ke folder `webapps` Tomcat di VPS.
+4.  Restart Tomcat: `sudo systemctl restart tomcat10`.

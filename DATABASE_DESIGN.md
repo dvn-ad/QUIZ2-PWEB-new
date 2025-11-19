@@ -55,6 +55,13 @@ PDM adalah representasi detail yang siap diimplementasikan ke dalam database, le
 | `price` | `DECIMAL(10, 2)`| Not Null | Harga buku |
 | `author_id`| `INT` | **FK** | Menghubungkan ke tabel `authors.id` |
 
+#### Tabel: `users`
+| Nama Kolom | Tipe Data (SQL) | Constraint | Deskripsi |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | **PK**, Auto Increment | ID unik untuk setiap pengguna |
+| `username` | `VARCHAR(50)` | Not Null, Unique | Nama pengguna |
+| `password` | `VARCHAR(255)` | Not Null | Kata sandi |
+
 ### Diagram PDM (ERD)
 ```mermaid
 erDiagram
@@ -69,6 +76,11 @@ erDiagram
         VARCHAR title
         DECIMAL price
         INT author_id FK
+    }
+    users {
+        INT id PK
+        VARCHAR username
+        VARCHAR password
     }
 ```
 
@@ -92,4 +104,13 @@ CREATE TABLE books (
     author_id INT,
     FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
 );
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+-- Insert default user (admin/admin)
+INSERT INTO users (username, password) VALUES ('admin', 'admin');
 ```
