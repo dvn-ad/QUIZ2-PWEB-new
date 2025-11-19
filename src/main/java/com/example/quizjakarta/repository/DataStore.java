@@ -26,6 +26,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error getting authors: " + e.getMessage(), e);
         }
         return authors;
     }
@@ -46,6 +47,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error getting author by id: " + e.getMessage(), e);
         }
         return null;
     }
@@ -64,6 +66,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error adding author: " + e.getMessage(), e);
         }
     }
 
@@ -77,6 +80,7 @@ public class DataStore {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error updating author: " + e.getMessage(), e);
         }
     }
 
@@ -88,6 +92,7 @@ public class DataStore {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error deleting author: " + e.getMessage(), e);
         }
     }
 
@@ -108,6 +113,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error getting books: " + e.getMessage(), e);
         }
         return books;
     }
@@ -129,6 +135,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error getting book by id: " + e.getMessage(), e);
         }
         return null;
     }
@@ -148,6 +155,7 @@ public class DataStore {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Gagal menyimpan buku: " + e.getMessage(), e);
         }
     }
 
@@ -162,6 +170,7 @@ public class DataStore {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error updating book: " + e.getMessage(), e);
         }
     }
 
@@ -173,6 +182,7 @@ public class DataStore {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error deleting book: " + e.getMessage(), e);
         }
     }
 }
