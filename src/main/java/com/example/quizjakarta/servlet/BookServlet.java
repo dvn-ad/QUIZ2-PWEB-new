@@ -54,10 +54,8 @@ public class BookServlet extends HttpServlet {
 
     private void listBooks(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Book> listBooks = DataStore.getAllBooks();
-        // We might want to attach author names to books for display, but for now let's just pass the list
-        // In a real app we would use a DTO or fetch authors in the JSP
         request.setAttribute("listBooks", listBooks);
-        request.setAttribute("authors", DataStore.getAllAuthors()); // For displaying author names if needed
+        request.setAttribute("authors", DataStore.getAllAuthors());
         request.getRequestDispatcher("book-list.jsp").forward(request, response);
     }
 

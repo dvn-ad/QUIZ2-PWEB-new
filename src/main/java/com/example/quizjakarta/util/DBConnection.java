@@ -11,7 +11,6 @@ public class DBConnection {
         return value != null ? value : defaultValue;
     }
 
-    // Konfigurasi Database: Prioritaskan Environment Variable, fallback ke localhost
     private static final String DB_HOST = getEnv("DB_HOST", "localhost");
     private static final String DB_PORT = getEnv("DB_PORT", "3306");
     private static final String DB_NAME = getEnv("DB_NAME", "quiz2");
@@ -22,7 +21,6 @@ public class DBConnection {
 
     static {
         try {
-            // Load driver MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
             System.out.println("DBConnection: MySQL Driver Loaded.");
             System.out.println("DBConnection: Connecting to " + URL + " with user " + USER);
